@@ -12,3 +12,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model User {
+  id               Int            @id @default(autoincrement())
+  firstname        String
+  lastname         String
+  email            String         @unique
+  username         String         @unique
+  password         String
+  membershipStatus String         @default("basic")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  profileImage     String?
+  
+  adminOfChats     Chat[]         @relation("ChatOwners")
+  memberOfchats    Chat[]         @relation("ChatMembers")
+  messages         Message[]   
+
+  
+
+}
+
+model Chat {
+   id               Int            @id @default(autoincrement())
+   name             String         @default("Chat")
+   createdAt        DateTime       @default(now())
+   userId           Int
+   deletedAt        DateTime?
+   admins           User[]         @relation("ChatOwners") 
+   members          User[]         @relation("ChatMembers")
+   messages         Message[]     
+
+
+}
+
+model Message {
+  id               Int            @id @default(autoincrement())
+  content          String
+  createdAt        DateTime       @default(now())
+  deletedAt        DateTime?
+  chatId           Int
+  userId           Int
+
+  files            File[]         // Related files for this message
+  chat             Chat           @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id])
+}
+
+
+model File {
+  id         Int      @id @default(autoincrement())
+  fileName   String
+  fileType   String
+  fileUrl    String  // URL to the file (either local or cloud storage)
+  messageId  Int     // Foreign key to the message this file is attached to
+
+  message    Message @relation(fields: [messageId], references: [id])
+}
