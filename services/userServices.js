@@ -14,15 +14,6 @@ export const checkIfUserExists = async (email, username) => {
   });
 };
 
-export const hashPassword = async (password) => {
-  return await bcrypt.hash(password, 10);
-};
-
-export const createUserInDb = async (userData) => {
-  return await prisma.user.create({
-    data: userData
-  });
-};
 
 export const generateToken = (userId) => {
   return jwt.sign(
