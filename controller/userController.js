@@ -23,7 +23,7 @@ export const createUser = [
       const conflictFields = await checkExistingUser(username, email);
 
       if (conflictFields) {
-        return res.status(409).json({ conflictFields });
+        return res.status(409).json(conflictFields );
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,7 +54,7 @@ export const createUser = [
   },
 ];
 
-const getUsers = async (req, res) => {
+export const getUsers = async (req, res) => {
   try {
     const users = await prisma.users.findMany();
     res.status(200).json({ users: users });
@@ -64,7 +64,7 @@ const getUsers = async (req, res) => {
 };
 
 // Get a single user by ID
-const getUser = async (req, res) => {
+export const getUser = async (req, res) => {
   try {
     const userId = Number(req.params.userId);
     const user = await prisma.user.findUnique({
@@ -81,7 +81,7 @@ const getUser = async (req, res) => {
   }
 };
 
-const updateUser = [
+export const updateUser = [
   validateUser,
   async (req, res) => {
     const validationErrors = validationResult(req);
@@ -93,7 +93,7 @@ const updateUser = [
     try {
       const conflictFields = await checkExistingUser(username, email, userId);
       if (conflictFields) {
-        return res.status(409).json({ conflictFields });
+        return res.status(409).json(conflictFields);
       }
       const updateUser = await prisma.user.update({
         where: { id: userId },
@@ -116,7 +116,7 @@ const updateUser = [
   },
 ];
 
-const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   try {
     const userId = Number(req.params.userId);
     const user = await prisma.user.delete({
@@ -128,7 +128,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const loginUser = async (req, res, next) => {
+export const loginUser = async (req, res, next) => {
   try {
     // Check if username and passowrd is provided in the request
     const { username, password } = req.body;
@@ -167,4 +167,22 @@ const loginUser = async (req, res, next) => {
     console.log(err);
     next(err); // Pass error to error handling middleware
   }
+};
+
+
+export const getUserChats = async (req, res) => {
+    const userId = Number(req.params.userId); // Ensure userId is a number
+
+    // Fetch only memberOfChats related to the user
+    const userChats = await prisma.user.findUnique({
+        where: {
+            id: userId, // Filter by userId
+        },
+        select: {
+            memberOfChats: true, // Only select the memberOfChats data
+        },
+    });
+
+    // Send the response
+    res.json(userChats);
 };

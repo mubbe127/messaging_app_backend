@@ -27,7 +27,7 @@ model User {
   profileImage     String?
   
   adminOfChats     Chat[]         @relation("ChatOwners")
-  memberOfchats    Chat[]         @relation("ChatMembers")
+  memberOfChats    Chat[]         @relation("ChatMembers")
   messages         Message[]   
 
   
