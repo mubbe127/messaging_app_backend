@@ -1,7 +1,7 @@
     import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
     import passport from "passport";
     import prisma from "../model/prismaClient.js";
-    import bcrypt from 'bcryptjs'
+ 
     var opts = {};
     opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
     opts.secretOrKey = "fluoguide";

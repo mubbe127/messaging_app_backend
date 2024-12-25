@@ -25,7 +25,8 @@ export const getChats = async (req, res) => {
   try {
     const chats = await prisma.chat.findMany({
         include: {
-            members:true
+            members:true,
+            messages:true
         }
     });
     res.status(201).json({ chats });
@@ -42,7 +43,8 @@ export const getChat = async (req, res) => {
         id,
       },
       include: {
-        members:true
+        members:true,
+        messages:true
       }
     });
 
