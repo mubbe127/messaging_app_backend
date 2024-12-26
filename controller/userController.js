@@ -3,7 +3,7 @@ import {
   validateUser,
   checkExistingUser,
 } from "../validation/userValidation.js";
-import * as userService from "../services/userService.js";
+
 import jwt from "jsonwebtoken";
 import { jwtDecode } from "jwt-decode";
 import prisma from "../model/prismaClient.js";
@@ -43,11 +43,11 @@ export const createUser = [
         },
       });
 
-      const token = userService.generateToken(user.id);
+      const accessToken = generateAccessToken(user.id);
 
       res.status(201).json({
         message: "User created successfully",
-        token,
+        accessToken,
         user: { id: user.id, username: user.username },
       });
     } catch (err) {

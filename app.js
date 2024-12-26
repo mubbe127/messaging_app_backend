@@ -2,9 +2,10 @@ import dotenv from 'dotenv';
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
 dotenv.config({ path: envFile });
 import express from "express";
-import chatRouter from './routes/chatRouter';
-import userRouter from './routes/userRouter';
-import messageRouter from './routes/messageRouter';
+import cors from "cors"
+import chatRouter from './routes/chatRouter.js';
+import userRouter from './routes/userRouter.js';
+import messageRouter from './routes/messageRouter.js';
 
 const app = express();
 app.use(cors({

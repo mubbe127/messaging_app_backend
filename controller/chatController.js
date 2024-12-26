@@ -1,5 +1,4 @@
-import { name } from "ejs";
-import prisma from "../model/prismaClient";
+import prisma from "../model/prismaClient.js";
 
 export const createChat = async (req, res) => {
   const { name, userId, memberIds } = req.body;

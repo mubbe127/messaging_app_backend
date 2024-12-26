@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-import * as userService from "../services/userService.js";
+import {checkIfUserExists} from "../services/userServices.js";
 
 export const validateUser = [
   body("username")
@@ -30,7 +30,7 @@ export const validateUser = [
 
 export const checkExistingUser = async (username, email, updateUserId=undefined) => {
 
-  const existingUser = await userService.checkIfUserExists(email, username);
+  const existingUser = await checkIfUserExists(email, username);
 
   if (existingUser) {
     const conflictFields = [];

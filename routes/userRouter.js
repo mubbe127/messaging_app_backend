@@ -11,7 +11,7 @@ userRouter.put('/:id', updateUser)
 userRouter.delete('/id', deleteUser)
 
 userRouter.get('/:id/chats/:id', getUserChats)
-userRouter.get('/:id/messages/:id', getUserMessages)
+
 
 userRouter.post('/login', loginUser)
 userRouter.post('refresh-token', refreshUserToken)

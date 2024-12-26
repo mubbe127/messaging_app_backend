@@ -2,7 +2,7 @@ import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import passport from "passport";
 import prisma from "../model/prismaClient.js";
 
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 
 var opts = {};

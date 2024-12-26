@@ -1,8 +1,8 @@
-import prisma from "../model/prismaClient";
-const multer = require("multer");
+import prisma from "../model/prismaClient.js";
+import multer from "multer";
 const upload = multer({ dest: "uploads/" });
 
-const createMessage = [
+export const createMessage = [
   upload.single("file"),
   async (req, res) => {
     try {
@@ -32,7 +32,7 @@ const createMessage = [
     }
   },
 ];
-const getChatOrUserMessages = async (req, res) => {
+export const getChatOrUserMessages = async (req, res) => {
   try {
     const { chatId, userId } = req.body;
 
@@ -58,7 +58,7 @@ const getChatOrUserMessages = async (req, res) => {
   }
 };
 
-const getMessages = async (req, res) => {
+export const getMessages = async (req, res) => {
   try {
     const allMessages = await prisma.message.findMany();
     res.status(200).json(allMessages);
@@ -66,7 +66,7 @@ const getMessages = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 };
-const getMessage = async (req, res) => {
+export const getMessage = async (req, res) => {
   try {
     const { messageId } = req.body;
 
@@ -81,7 +81,7 @@ const getMessage = async (req, res) => {
   }
 };
 
-const deleteMessage = async (req, res) => {
+export const deleteMessage = async (req, res) => {
   const { messageId } = req.body;
   try {
     const deleteMessage = await prisma.message.delete({
@@ -95,7 +95,7 @@ const deleteMessage = async (req, res) => {
   }
 };
 
-const updateMessage = async (req, res) => {
+export const updateMessage = async (req, res) => {
   try {
     const { content, messageId } = req.body;
 
