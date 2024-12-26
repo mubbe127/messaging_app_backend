@@ -5,9 +5,14 @@ import {
 } from "../validation/userValidation.js";
 import * as userService from "../services/userService.js";
 import jwt from "jsonwebtoken";
+import { jwtDecode } from "jwt-decode";
 import prisma from "../model/prismaClient.js";
 import bcrypt from "bcryptjs";
 import passport from "../middlewares/authMiddleware.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../services/tokenUtils.js";
 
 export const createUser = [
   validateUser,
@@ -23,7 +28,7 @@ export const createUser = [
       const conflictFields = await checkExistingUser(username, email);
 
       if (conflictFields) {
-        return res.status(409).json(conflictFields );
+        return res.status(409).json(conflictFields);
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -89,7 +94,8 @@ export const updateUser = [
       return res.status(400).json(validationErrors);
     }
     const userId = Number(req.params.userId);
-    const { username, firstname, lastname, email, password, profileImage } = req.body;
+    const { username, firstname, lastname, email, password, profileImage } =
+      req.body;
     try {
       const conflictFields = await checkExistingUser(username, email, userId);
       if (conflictFields) {
@@ -107,7 +113,6 @@ export const updateUser = [
         },
       });
 
-      
       // Logic for updating user
       res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
@@ -126,6 +131,23 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to delete user" });
   }
+};
+
+export const getUserChats = async (req, res) => {
+  const userId = Number(req.params.userId); // Ensure userId is a number
+
+  // Fetch only memberOfChats related to the user
+  const userChats = await prisma.user.findUnique({
+    where: {
+      id: userId, // Filter by userId
+    },
+    select: {
+      memberOfChats: true, // Only select the memberOfChats data
+    },
+  });
+
+  // Send the response
+  res.json(userChats);
 };
 
 export const loginUser = async (req, res, next) => {
@@ -153,11 +175,13 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ message: "Incorrect password!" });
     }
 
-    // Generate JWT token
-    const token = userService.generateToken(user.id);
+    // Generate JWT token ///IMPORT
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
     res.json({
-      token,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         username: user.username,
@@ -169,20 +193,45 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+export const refreshUserToken = async (req, res) => {
+  const { refreshToken } = req.body;
 
-export const getUserChats = async (req, res) => {
-    const userId = Number(req.params.userId); // Ensure userId is a number
+  if (!refreshToken)
+    return res.status(401).json({ message: "Refresh token required" });
 
-    // Fetch only memberOfChats related to the user
-    const userChats = await prisma.user.findUnique({
+  const userId = jwtDecode(refreshToken).sub;
+  const token = await prisma.token.findUnique({
+    where: { userId },
+  });
+  if (!token) {
+    return res.status(403).json({ message: "Token not found in store" });
+  }
+
+  const match = await bcrypt.compare(refreshToken, token.refreshToken);
+
+  // CHECK DATABASE
+  if (!match) return res.status(403).json({ message: "Invalid refresh token" });
+  try {
+    const user = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET); // Verify refresh token
+    const newAccessToken = generateAccessToken(user.sub); // Generate new access token
+    res.status(201).json({ accessToken: newAccessToken });
+  } catch (error) {
+    res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
+};
+export const logout = async (req, res) => {
+  const { refreshToken } = req.body;
+  const userId = jwtDecode(refreshToken).sub;
+  if (refreshToken) {
+    try {
+      const deleteToken = await prisma.token.delete({
         where: {
-            id: userId, // Filter by userId
+          userId,
         },
-        select: {
-            memberOfChats: true, // Only select the memberOfChats data
-        },
-    });
-
-    // Send the response
-    res.json(userChats);
+      });
+      res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+      res.status(401).json({ message: "Failed removing token" });
+    }
+  } // Remove refresh token from DB
 };

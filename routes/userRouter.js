@@ -1,5 +1,6 @@
 import {Router} from "express";
-import {getUsers, getUser, createUser, updateUser, deleteUser,getUserChats} from "../services/userService.js";
+import {getUsers, getUser, createUser, updateUser, deleteUser,getUserChats} from "../controller/userController.js";
+import { loginUser, logout, refreshUserToken } from "../controller/userController.js";
 
 const userRouter = Router()
 
@@ -11,6 +12,10 @@ userRouter.delete('/id', deleteUser)
 
 userRouter.get('/:id/chats/:id', getUserChats)
 userRouter.get('/:id/messages/:id', getUserMessages)
+
+userRouter.post('/login', loginUser)
+userRouter.post('refresh-token', refreshUserToken)
+userRouter.post('/logout', logout)
 
 
 export default userRouter

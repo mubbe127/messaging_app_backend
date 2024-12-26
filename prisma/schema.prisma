@@ -70,3 +70,12 @@ model File {
 
   message    Message @relation(fields: [messageId], references: [id])
 }
+
+model Token {
+
+  id                Int      @id @default(autoincrement())
+  refreshToken      String   
+  userId            Int
+
+  user              User     @relation(fields: [userId], references: [id])
+}
