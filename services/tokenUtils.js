@@ -25,7 +25,19 @@ import bcrypt from "bcryptjs";
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
+    const existingToken = await prisma.token.findUnique({
+      where:{
+        userId
+      }
+    })
 
+    if(existingToken) {
+      const deleteToken= await prisma.token.delete({
+        where: {
+          userId
+        }
+      })
+    }
     const hashedToken = await bcrypt.hash(refreshToken, 10);
     const storeRefreshToken = await prisma.token.create({
         data: {
@@ -37,4 +49,11 @@ import bcrypt from "bcryptjs";
     return refreshToken;
   };
 
+  export const verifysAccessToken = async(refreshToken)=>{
 
+    const user = jwt.verify(refreshToken, ACCESS_TOKEN_SECRET)
+  }
+export const verifyRefreshToken = async(refreshToken)=>{
+
+  const user = jwt.verify(refreshToken,  REFRESH_TOKEN_SECRET)
+}

@@ -12,6 +12,8 @@ import passport from "../middlewares/authMiddleware.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
+  verifysAccessToken
 } from "../services/tokenUtils.js";
 
 export const createUser = [
@@ -44,10 +46,12 @@ export const createUser = [
       });
 
       const accessToken = generateAccessToken(user.id);
+      const refreshToken = generateAccessToken(user.id)
 
       res.status(201).json({
         message: "User created successfully",
         accessToken,
+        refreshToken,
         user: { id: user.id, username: user.username },
       });
     } catch (err) {
@@ -177,7 +181,7 @@ export const loginUser = async (req, res, next) => {
 
     // Generate JWT token ///IMPORT
     const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const refreshToken = await generateRefreshToken(user);
 
     res.json({
       accessToken,
@@ -199,7 +203,11 @@ export const refreshUserToken = async (req, res) => {
   if (!refreshToken)
     return res.status(401).json({ message: "Refresh token required" });
 
-  const userId = jwtDecode(refreshToken).sub;
+  const verifiedToken = await verifyRefreshToken(refreshToken)
+  if(!verifiedToken){
+    return res.status(401).json({ message: "Could not verify refresh token" });
+  }
+  const userId = verifiedToken.sub
   const token = await prisma.token.findUnique({
     where: { userId },
   });
@@ -212,7 +220,7 @@ export const refreshUserToken = async (req, res) => {
   // CHECK DATABASE
   if (!match) return res.status(403).json({ message: "Invalid refresh token" });
   try {
-    const user = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET); // Verify refresh token
+    
     const newAccessToken = generateAccessToken(user.sub); // Generate new access token
     res.status(201).json({ accessToken: newAccessToken });
   } catch (error) {
