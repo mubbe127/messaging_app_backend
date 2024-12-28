@@ -20,12 +20,15 @@ import bcrypt from "bcryptjs";
   };
   
   // Function to generate refresh token
+
+  //CONSIDER CHANGING SEVERAL TOKENS FOR ONE USER TO ALLOW AUTHENICATION IN MULTIPLE DEVICES
+
  export const generateRefreshToken = async(userId) => {
     const refreshToken = jwt.sign({sub:userId}, REFRESH_TOKEN_SECRET, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
-    const existingToken = await prisma.token.findUnique({
+    /*const existingToken = await prisma.token.findUnique({
       where:{
         userId
       }
@@ -37,7 +40,7 @@ import bcrypt from "bcryptjs";
           userId
         }
       })
-    }
+    } */
     const hashedToken = await bcrypt.hash(refreshToken, 10);
     const storeRefreshToken = await prisma.token.create({
         data: {
@@ -52,8 +55,11 @@ import bcrypt from "bcryptjs";
   export const verifysAccessToken = async(refreshToken)=>{
 
     const user = jwt.verify(refreshToken, ACCESS_TOKEN_SECRET)
+
+    return user
   }
 export const verifyRefreshToken = async(refreshToken)=>{
 
   const user = jwt.verify(refreshToken,  REFRESH_TOKEN_SECRET)
+  return user
 }
