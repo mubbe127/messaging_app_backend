@@ -14,7 +14,7 @@ userRouter.get('/:id/chats/:id', getUserChats)
 
 
 userRouter.post('/login', loginUser)
-userRouter.post('refresh-token', refreshUserToken)
+userRouter.post('/refresh-token', refreshUserToken)
 userRouter.post('/logout', logout)
 
 

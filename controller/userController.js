@@ -240,13 +240,13 @@ export const logout = async (req, res) => {
 
   const { refreshToken } = req.body;
   console.log(refreshToken)
-  const userId = jwtDecode(refreshToken).sub;
-  console.log("logout", userId)
+  const tokenId = jwtDecode(refreshToken).id;
+ 
   if (refreshToken) {
     try {
       const deleteToken = await prisma.token.delete({
         where: {
-          userId,
+          id:tokenId,
         },
       });
       res.status(200).json({ message: "Logged out successfully" });
