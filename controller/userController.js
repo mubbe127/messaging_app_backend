@@ -46,7 +46,7 @@ export const createUser = [
       });
 
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = generateAccessToken(user.id)
+      const refreshToken = await generateRefreshToken(user.id)
 
       res.status(201).json({
         message: "User created successfully",
@@ -166,8 +166,10 @@ export const loginUser = async (req, res, next) => {
 
     // Using Prisma to query the user by username
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { username},
     });
+
+    console.log(user)
 
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
@@ -180,8 +182,8 @@ export const loginUser = async (req, res, next) => {
     }
 
     // Generate JWT token ///IMPORT
-    const accessToken = generateAccessToken(user);
-    const refreshToken = await generateRefreshToken(user);
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = await generateRefreshToken(user.id);
 
     res.json({
       accessToken,
@@ -200,11 +202,14 @@ export const loginUser = async (req, res, next) => {
 export const refreshUserToken = async (req, res) => {
   const { refreshToken } = req.body;
 
-  if (!refreshToken)
+  if (!refreshToken){
+    console.log("No token was sent")
     return res.status(401).json({ message: "Refresh token required" });
+  }
 
   const verifiedToken = await verifyRefreshToken(refreshToken)
   if(!verifiedToken){
+    console.log("Could not verify refresh token" )
     return res.status(401).json({ message: "Could not verify refresh token" });
   }
   const userId = verifiedToken.sub
@@ -212,24 +217,31 @@ export const refreshUserToken = async (req, res) => {
     where: { userId },
   });
   if (!token) {
+    console.log("Token not found in store")
     return res.status(403).json({ message: "Token not found in store" });
   }
-
+  console.log(verifiedToken)
   const match = await bcrypt.compare(refreshToken, token.refreshToken);
-
+  console.log("match",match)
   // CHECK DATABASE
-  if (!match) return res.status(403).json({ message: "Invalid refresh token" });
+  if (!match) {
+    console.log("Didnt match token")
+    return res.status(403).json({ message: "Invalid refresh token" });}
   try {
     
-    const newAccessToken = generateAccessToken(user.sub); // Generate new access token
+    const newAccessToken = generateAccessToken(userId); // Generate new access token
     res.status(201).json({ accessToken: newAccessToken });
   } catch (error) {
+    console.log("LAST TOKEN ERROR")
     res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 };
 export const logout = async (req, res) => {
+
   const { refreshToken } = req.body;
+  console.log(refreshToken)
   const userId = jwtDecode(refreshToken).sub;
+  console.log("logout", userId)
   if (refreshToken) {
     try {
       const deleteToken = await prisma.token.delete({
