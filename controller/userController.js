@@ -212,9 +212,9 @@ export const refreshUserToken = async (req, res) => {
     console.log("Could not verify refresh token" )
     return res.status(401).json({ message: "Could not verify refresh token" });
   }
-  const userId = verifiedToken.sub
+  const tokenId = verifiedToken.id
   const token = await prisma.token.findUnique({
-    where: { userId },
+    where: { id:tokenId },
   });
   if (!token) {
     console.log("Token not found in store")
