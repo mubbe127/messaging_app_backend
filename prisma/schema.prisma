@@ -29,9 +29,7 @@ model User {
   adminOfChats     Chat[]         @relation("ChatOwners")
   memberOfChats    Chat[]         @relation("ChatMembers")
   messages         Message[]   
-
-  
-
+  token            Token[]
 }
 
 model Chat {
@@ -75,7 +73,7 @@ model Token {
 
   id                Int      @id @default(autoincrement())
   refreshToken      String   
-  userId            Int
+  userId            Int      
 
   user              User     @relation(fields: [userId], references: [id])
 }
