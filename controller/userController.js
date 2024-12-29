@@ -13,7 +13,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-  verifysAccessToken
+  verifysAccessToken,
 } from "../services/tokenUtils.js";
 
 export const createUser = [
@@ -46,7 +46,7 @@ export const createUser = [
       });
 
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id)
+      const refreshToken = await generateRefreshToken(user.id);
 
       res.status(201).json({
         message: "User created successfully",
@@ -165,11 +165,20 @@ export const loginUser = async (req, res, next) => {
     }
 
     // Using Prisma to query the user by username
-    const user = await prisma.user.findUnique({
-      where: { username},
-    });
+    const user= await prisma.user.findUnique({
+      where:{
+        username,
+      },
+      select: {
+        firstname,
+        lastname,
+        email,
+        username,
+        profileImage,
+      }
+    })
 
-    console.log(user)
+    console.log(user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
@@ -188,10 +197,7 @@ export const loginUser = async (req, res, next) => {
     res.json({
       accessToken,
       refreshToken,
-      user: {
-        id: user.id,
-        username: user.username,
-      },
+      user,
     });
   } catch (err) {
     console.log(err);
@@ -202,51 +208,64 @@ export const loginUser = async (req, res, next) => {
 export const refreshUserToken = async (req, res) => {
   const { refreshToken } = req.body;
 
-  if (!refreshToken){
-    console.log("No token was sent")
+  if (!refreshToken) {
+    console.log("No token was sent");
     return res.status(401).json({ message: "Refresh token required" });
   }
 
-  const verifiedToken = await verifyRefreshToken(refreshToken)
-  if(!verifiedToken){
-    console.log("Could not verify refresh token" )
+  const verifiedToken = await verifyRefreshToken(refreshToken);
+
+  if (!verifiedToken) {
+    console.log("Could not verify refresh token");
     return res.status(401).json({ message: "Could not verify refresh token" });
   }
-  const tokenId = verifiedToken.id
-  const token = await prisma.token.findUnique({
-    where: { id:tokenId },
-  });
-  if (!token) {
-    console.log("Token not found in store")
-    return res.status(403).json({ message: "Token not found in store" });
-  }
-  console.log(verifiedToken)
-  const match = await bcrypt.compare(refreshToken, token.refreshToken);
-  console.log("match",match)
-  // CHECK DATABASE
-  if (!match) {
-    console.log("Didnt match token")
-    return res.status(403).json({ message: "Invalid refresh token" });}
+  const tokenId = verifiedToken.id;
+  const userId = verifiedToken.sub;
   try {
-    
-    const newAccessToken = generateAccessToken(userId); // Generate new access token
-    res.status(201).json({ accessToken: newAccessToken });
+    const token = await prisma.token.findUnique({
+      where: { id: tokenId },
+    });
+    if (!token) {
+      console.log("Token not found in store");
+      return res.status(403).json({ message: "Token not found in store" });
+    }
+    console.log(verifiedToken);
+    const match = await bcrypt.compare(refreshToken, token.refreshToken);
+    console.log("match", match);
+    // CHECK DATABASE
+    if (!match) {
+      console.log("Didnt match token");
+      return res.status(403).json({ message: "Invalid refresh token" });
+    }
+    const newAccessToken = generateAccessToken(userId); 
+    const user= await prisma.user.findUnique({
+      where:{
+        userId
+      },
+      select: {
+        firstname,
+        lastname,
+        email,
+        username,
+        profileImage,
+      }
+    })// Generate new access token
+    res.status(201).json({ accessToken: newAccessToken, user });
   } catch (error) {
-    console.log("LAST TOKEN ERROR")
+    console.log("LAST TOKEN ERROR");
     res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 };
 export const logout = async (req, res) => {
-
   const { refreshToken } = req.body;
-  console.log(refreshToken)
+  console.log(refreshToken);
   const tokenId = jwtDecode(refreshToken).id;
- 
+
   if (refreshToken) {
     try {
       const deleteToken = await prisma.token.delete({
         where: {
-          id:tokenId,
+          id: tokenId,
         },
       });
       res.status(200).json({ message: "Logged out successfully" });
