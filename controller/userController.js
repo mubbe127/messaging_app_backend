@@ -239,9 +239,10 @@ export const refreshUserToken = async (req, res) => {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
     const newAccessToken = generateAccessToken(userId); 
+    console.log("Access Token expected", newAccessToken)
     const user= await prisma.user.findUnique({
       where:{
-        userId
+        id:userId
       },
       select: {
         firstname:true,
@@ -249,9 +250,10 @@ export const refreshUserToken = async (req, res) => {
         email:true,
         username:true,
         profileImage:true,
-        userid:true,
+        id:true,
       }
     })// Generate new access token
+    console.log(user)
     res.status(201).json({ accessToken: newAccessToken, user });
   } catch (error) {
     console.log("LAST TOKEN ERROR");
