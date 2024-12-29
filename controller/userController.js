@@ -168,13 +168,6 @@ export const loginUser = async (req, res, next) => {
     const user= await prisma.user.findUnique({
       where:{
         username,
-      },
-      select: {
-        firstname,
-        lastname,
-        email,
-        username,
-        profileImage,
       }
     })
 
@@ -197,7 +190,15 @@ export const loginUser = async (req, res, next) => {
     res.json({
       accessToken,
       refreshToken,
-      user,
+      user:{
+        id:user.id,
+        username: user.username,
+        firstname:user.firstname,
+        lastname: user.lastname,
+        email:user.email,
+        profileImage: user.profileImage,
+
+      },
     });
   } catch (err) {
     console.log(err);
@@ -243,11 +244,12 @@ export const refreshUserToken = async (req, res) => {
         userId
       },
       select: {
-        firstname,
-        lastname,
-        email,
-        username,
-        profileImage,
+        firstname:true,
+        lastname:true,
+        email:true,
+        username:true,
+        profileImage:true,
+        userid:true,
       }
     })// Generate new access token
     res.status(201).json({ accessToken: newAccessToken, user });
