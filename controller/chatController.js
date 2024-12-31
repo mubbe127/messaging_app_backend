@@ -1,8 +1,9 @@
 import prisma from "../model/prismaClient.js";
 
 export const createChat = async (req, res) => {
-  const { name, userId, memberIds } = req.body;
-
+  const { name} = req.body;
+  const userId  = Number(req.body.userId)
+  const memberIds = JSON.parse(req.body.memberIds);
   const newChat = await prisma.chat.create({
     data: {
       name,

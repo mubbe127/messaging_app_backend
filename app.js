@@ -6,6 +6,7 @@ import cors from "cors"
 import chatRouter from './routes/chatRouter.js';
 import userRouter from './routes/userRouter.js';
 import messageRouter from './routes/messageRouter.js';
+import searchRouter from './routes/searchRouter.js';
 
 const app = express();
 app.use(cors({
@@ -21,6 +22,7 @@ app.use(express.static("public"))
 app.use('/api/users', userRouter)
 app.use('/api/chats', chatRouter)
 app.use('/api/messages', messageRouter)
+app.use('/api/search', searchRouter)
 
 app.listen(4100, () => console.log("app listening on port 4100!"));
 

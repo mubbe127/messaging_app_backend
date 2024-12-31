@@ -36,7 +36,7 @@ model Chat {
    id               Int            @id @default(autoincrement())
    name             String         @default("Chat")
    createdAt        DateTime       @default(now())
-   userId           Int
+
    deletedAt        DateTime?
    admins           User[]         @relation("ChatOwners") 
    members          User[]         @relation("ChatMembers")

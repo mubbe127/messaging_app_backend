@@ -65,7 +65,7 @@ export const createUser = [
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await prisma.users.findMany();
+    const users = await prisma.user.findMany();
     res.status(201).json({ users: users });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
