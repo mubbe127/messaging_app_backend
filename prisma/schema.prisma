@@ -34,7 +34,7 @@ model User {
 
 model Chat {
    id               Int            @id @default(autoincrement())
-   name             String         @default("Chat")
+   name             String?         
    createdAt        DateTime       @default(now())
 
    deletedAt        DateTime?
