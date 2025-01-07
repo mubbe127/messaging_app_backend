@@ -7,6 +7,12 @@ import chatRouter from './routes/chatRouter.js';
 import userRouter from './routes/userRouter.js';
 import messageRouter from './routes/messageRouter.js';
 import searchRouter from './routes/searchRouter.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __filename and __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({
@@ -17,6 +23,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.use('/api/users', userRouter)
