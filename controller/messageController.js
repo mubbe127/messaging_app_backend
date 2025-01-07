@@ -6,7 +6,10 @@ export const createMessage = [
   upload.single("file"),
   async (req, res) => {
     try {
-      const { content, chatId, userId } = req.body;
+      const { content } = req.body;
+      const userId = Number(req.body.userId)
+      console.log(userId)
+      const chatId= Number(req.body.chatId)
       const message = await prisma.message.create({
         data: {
           content,
@@ -14,18 +17,21 @@ export const createMessage = [
           chatId,
         },
       });
+      console.log(message)
       if (req.file) {
+        console.log(req.file)
         const file = await prisma.file.create({
           data: {
-            name: req.file.originalname,
-            size: req.file.size,
-            path: req.file.path,
-            userId: req.user.id,
+            fileName: req.file.originalname,
+            fileType: req.file.mimetype,
+            fileSize: req.file.size,
+            filePath: req.file.path,
+            userId,
             messageId: message.id,
           },
-        });
+        }); 
       }
-      res.status(201).json({ message: "Succesfully created message" });
+      res.status(201).json({ message: "Succesfully created message", message });
     } catch (error) {
       console.error("Error creating file:", error);
       res.status(500).json({ message: "Failed to create file", error });
