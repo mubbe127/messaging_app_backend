@@ -29,6 +29,7 @@ model User {
   adminOfChats     Chat[]         @relation("ChatOwners")
   memberOfChats    Chat[]         @relation("ChatMembers")
   messages         Message[]   
+  files            File[]
   token            Token[]
 }
 
@@ -63,10 +64,12 @@ model File {
   id         Int      @id @default(autoincrement())
   fileName   String
   fileType   String
-  fileUrl    String  // URL to the file (either local or cloud storage)
+  fileSize   Int 
+  filePath    String  // URL to the file (either local or cloud storage)
   messageId  Int     // Foreign key to the message this file is attached to
-
+  userId     Int
   message    Message @relation(fields: [messageId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model Token {
