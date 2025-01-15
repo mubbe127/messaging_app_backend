@@ -7,9 +7,9 @@ export const createMessage = [
   async (req, res) => {
     try {
       const { content } = req.body;
-      const userId = Number(req.body.userId)
-      console.log(userId)
-      const chatId= Number(req.body.chatId)
+      const userId = Number(req.body.userId);
+      console.log(userId);
+      const chatId = Number(req.body.chatId);
       const message = await prisma.message.create({
         data: {
           content,
@@ -17,9 +17,10 @@ export const createMessage = [
           chatId,
         },
       });
-      console.log(message)
+      console.log("req file", req.file);
+
       if (req.file) {
-        console.log(req.file)
+        console.log(req.file);
         const file = await prisma.file.create({
           data: {
             fileName: req.file.originalname,
@@ -29,7 +30,8 @@ export const createMessage = [
             userId,
             messageId: message.id,
           },
-        }); 
+        });
+        console.log("the file", file);
       }
       res.status(201).json({ message: "Succesfully created message", message });
     } catch (error) {
@@ -116,5 +118,55 @@ export const updateMessage = async (req, res) => {
     res.status(200).json({ message: "Succesfully updated message" });
   } catch (error) {
     res.status(500).json({ error: "Failed to update message " });
+  }
+};
+
+export const updateViewedMessages = async (req, res) => {
+ 
+
+  try {
+    console.log("update view messages")
+    const chatId = Number(req.body.chatId);
+    const userId = Number(req.body.userId)
+
+    // Fetch messages by chatId
+    const messages = await prisma.message.findMany({
+      where: {
+        chatId,
+      },
+    });
+
+    console.log(messages)
+  
+    // Update each message's viewedBy relation
+    for (const message of messages) {
+      await prisma.message.update({
+        where: {
+          id: message.id,
+        },
+        data: {
+          viewedBy: {
+            connect: { id: userId },
+          },
+        },
+
+      });
+
+    }
+
+    const messageWithViewers = await prisma.message.findMany({
+      where: {
+        chatId
+      },
+      include: {
+        viewedBy: true, // Include the users who viewed the message
+      },
+    });
+   
+    console.log("succesfully updated view")
+    res.status(200).json({ message: "ViewedBy updated for all messages in chat.", messageWithViewers });
+  } catch (error) {
+    console.log("failed update messages",error);
+    res.status(500).json({ error: "Failed to update messages viewedBy relations." });
   }
 };
