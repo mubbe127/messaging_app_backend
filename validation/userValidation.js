@@ -1,11 +1,7 @@
 import { body } from "express-validator";
 import {checkIfUserExists} from "../services/userServices.js";
 
-function refactorToBody(req,res, next) {
-console.log("update user", req.body)
 
-next()
-}
 export const validateUser = [
  
   body("username")

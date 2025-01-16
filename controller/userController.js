@@ -5,11 +5,11 @@ import {
   checkExistingUser,
 } from "../validation/userValidation.js";
 
-import jwt from "jsonwebtoken";
+
 import { jwtDecode } from "jwt-decode";
 import prisma from "../model/prismaClient.js";
 import bcrypt from "bcryptjs";
-import passport from "../middlewares/authMiddleware.js";
+
 import {
   generateAccessToken,
   generateRefreshToken,

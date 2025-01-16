@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
+/*dotenv.config() -*/
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
-dotenv.config({ path: envFile });
+dotenv.config({ path: envFile }); 
+
+
 import express from "express";
 import cors from "cors"
 import chatRouter from './routes/chatRouter.js';
