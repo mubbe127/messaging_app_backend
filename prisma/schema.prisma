@@ -26,6 +26,7 @@ model User {
   updatedAt        DateTime       @updatedAt
   profileImage     String?
   
+  viewedMessages   Message[]      @relation("MessageViewers")
   adminOfChats     Chat[]         @relation("ChatOwners")
   memberOfChats    Chat[]         @relation("ChatMembers")
   messages         Message[]   
@@ -37,7 +38,8 @@ model Chat {
    id               Int            @id @default(autoincrement())
    name             String?         
    createdAt        DateTime       @default(now())
-
+   updatedAt        DateTime       @updatedAt
+    profileImage      String?    
    deletedAt        DateTime?
    admins           User[]         @relation("ChatOwners") 
    members          User[]         @relation("ChatMembers")
@@ -53,7 +55,7 @@ model Message {
   deletedAt        DateTime?
   chatId           Int
   userId           Int
-
+  viewedBy         User[]         @relation("MessageViewers")
   files            File[]         // Related files for this message
   chat             Chat           @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user             User           @relation(fields: [userId], references: [id])

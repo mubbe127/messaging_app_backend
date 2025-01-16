@@ -1,7 +1,13 @@
 import { body } from "express-validator";
 import {checkIfUserExists} from "../services/userServices.js";
 
+function refactorToBody(req,res, next) {
+console.log("update user", req.body)
+
+next()
+}
 export const validateUser = [
+ 
   body("username")
     .isLength({ min: 1, max: 80 })
     .withMessage(`Username must be at least 1 and max 80 characters long`),
@@ -23,6 +29,16 @@ export const validateUser = [
     }
     return true;
   }),
+  body("email").isEmail().withMessage("Please provide a valid email address"),
+  body("firstname").isAlpha().withMessage("Name must only contains letters"),
+  body("lastname").isAlpha().withMessage("Name must only contains letters"),
+];
+
+export const validateUpdateUser = [
+ 
+  body("username")
+    .isLength({ min: 1, max: 80 })
+    .withMessage(`Username must be at least 1 and max 80 characters long`),
   body("email").isEmail().withMessage("Please provide a valid email address"),
   body("firstname").isAlpha().withMessage("Name must only contains letters"),
   body("lastname").isAlpha().withMessage("Name must only contains letters"),

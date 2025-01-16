@@ -1,16 +1,16 @@
 import {Router} from "express";
-import {getUsers, getUser, createUser, updateUser, deleteUser,getUserChats} from "../controller/userController.js";
+import  {getUser, createUser, updateUser, deleteUser} from "../controller/userController.js";
 import { loginUser, logout, refreshUserToken } from "../controller/userController.js";
 
 const userRouter = Router()
 
-userRouter.get('/', getUsers)
-userRouter.get('/', getUser)
-userRouter.post('/', createUser)
-userRouter.put('/:id', updateUser)
-userRouter.delete('/id', deleteUser)
 
-userRouter.get('/:id/chats/:id', getUserChats)
+userRouter.get('/:userId', getUser)
+userRouter.post('/', createUser)
+userRouter.put('/:userId', updateUser)
+userRouter.delete('/userId', deleteUser)
+
+
 
 
 userRouter.post('/login', loginUser)

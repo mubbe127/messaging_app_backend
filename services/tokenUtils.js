@@ -58,12 +58,28 @@ export const generateRefreshToken = async (userId) => {
   return refreshToken;
 };
 
-export const verifysAccessToken = async (refreshToken) => {
-  const user = jwt.verify(refreshToken, ACCESS_TOKEN_SECRET);
 
-  return user;
+export const verifyAccessToken = (accessToken) => {
+  try {
+    const user = jwt.verify(accessToken, ACCESS_TOKEN_SECRET);
+    if (!user) {
+      console.log("Access token invalid or empty");
+      return false;
+    }
+    return user; 
+  } catch (error) {
+    console.log("Access token verification failed:", error.message);
+    return false;
+  }
 };
-export const verifyRefreshToken = async (refreshToken) => {
-  const user = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-  return user;
+
+export const verifyRefreshToken = (refreshToken) => {
+  try {
+    console.log("Verifying refresh token");
+    const user = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    return user;
+  } catch (error) {
+    console.log("Refresh token verification failed:", error.message);
+    return false; 
+  }
 };

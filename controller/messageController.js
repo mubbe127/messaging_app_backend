@@ -1,15 +1,39 @@
 import prisma from "../model/prismaClient.js";
 import multer from "multer";
 const upload = multer({ dest: "uploads/" });
+import { verifyAccessToken } from "../services/tokenUtils.js";
 
 export const createMessage = [
   upload.single("file"),
   async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Authorization header missing" });
+    }
+
+    // Extract the token from the header (format: "Bearer <token>")
+    const token = authHeader.split(" ")[1];
+    const user = verifyAccessToken(token);
+    if (!user) {
+      return res.status(401).json({ error: "Authorization not valid" });
+    }
+    const userId = user.sub;
+    const { content } = req.body;
+    const chatId = Number(req.body.chatId);
     try {
-      const { content } = req.body;
-      const userId = Number(req.body.userId);
-      console.log(userId);
-      const chatId = Number(req.body.chatId);
+      const chat = await prisma.chat.findUnique({
+        where: {
+          id: chatId,
+          members: { some: { id: userId } },
+        },
+      });
+
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ error: "Authorization not valid, not a member of chat" });
+    }
+    try {
       const message = await prisma.message.create({
         data: {
           content,
@@ -17,30 +41,56 @@ export const createMessage = [
           chatId,
         },
       });
-      console.log("req file", req.file);
 
-      if (req.file) {
-        console.log(req.file);
-        const file = await prisma.file.create({
-          data: {
-            fileName: req.file.originalname,
-            fileType: req.file.mimetype,
-            fileSize: req.file.size,
-            filePath: req.file.path,
-            userId,
-            messageId: message.id,
-          },
-        });
-        console.log("the file", file);
+      if(req.file){
+      const file = await prisma.file.create({
+        data: {
+          fileName: req.file.originalname,
+          fileType: req.file.mimetype,
+          fileSize: req.file.size,
+          filePath: req.file.path,
+          userId,
+          messageId: message.id,
+        },
+      });
       }
-      res.status(201).json({ message: "Succesfully created message", message });
+      const updateChat = await prisma.chat.update({
+        where: {
+          id: chatId,
+        },
+        data: {
+          updatedAt: new Date(), 
+        }
+      })
+     
+      console.log("succesfully created");
+      return res
+        .status(201)
+        .json({ message: "Succesfully created message", message });
     } catch (error) {
       console.error("Error creating file:", error);
-      res.status(500).json({ message: "Failed to create file", error });
+      return res.status(500).json({ message: "Failed to create file", error });
     }
   },
 ];
+
+/*
 export const getChatOrUserMessages = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
   try {
     const { chatId, userId } = req.body;
 
@@ -64,16 +114,34 @@ export const getChatOrUserMessages = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Failed to fetch message" });
   }
-};
+}; */
 
+/*
 export const getMessages = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
   try {
     const allMessages = await prisma.message.findMany();
     res.status(200).json(allMessages);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch messages" });
   }
-};
+}; */
+
+/*
 export const getMessage = async (req, res) => {
   try {
     const { messageId } = req.body;
@@ -87,57 +155,109 @@ export const getMessage = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch message" });
   }
-};
+}; */
 
 export const deleteMessage = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+  const userId = user.sub;
   const { messageId } = req.body;
   try {
     const deleteMessage = await prisma.message.delete({
       where: {
-        messageId,
+        id: messageId,
+        userId,
       },
     });
-    res.status(200).json({ message: "Successfully deleted message" });
+    return res.status(200).json({ message: "Successfully deleted message" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete message" });
+    return res.status(500).json({ error: "Failed to delete message" });
   }
 };
 
 export const updateMessage = async (req, res) => {
-  try {
-    const { content, messageId } = req.body;
+  const authHeader = req.headers.authorization;
 
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+  const userId = user.sub;
+  const { content, messageId } = req.body;
+
+  try {
     const updateMessage = await prisma.message.update({
       where: {
         id: messageId,
+        userId,
       },
       data: {
         content,
       },
     });
-    res.status(200).json({ message: "Succesfully updated message" });
+    return res.status(200).json({ message: "Succesfully updated message" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update message " });
+    return res.status(500).json({ error: "Failed to update message " });
   }
 };
 
 export const updateViewedMessages = async (req, res) => {
- 
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+  const userId = user.sub;
+  console.log("update view messages");
+  const chatId = Number(req.body.chatId);
+  try {
+    const chat = await prisma.chat.findUnique({
+      where: {
+        id: chatId,
+        members: { some: { id: userId } },
+      },
+    });
+  } catch (error) {
+    return res
+      .status(401)
+      .json({ message: "Authorization not valid, not a member of chat" });
+  }
 
   try {
-    console.log("update view messages")
-    const chatId = Number(req.body.chatId);
-    const userId = Number(req.body.userId)
-
-    // Fetch messages by chatId
     const messages = await prisma.message.findMany({
       where: {
         chatId,
       },
     });
 
-    console.log(messages)
-  
     // Update each message's viewedBy relation
     for (const message of messages) {
       await prisma.message.update({
@@ -149,24 +269,16 @@ export const updateViewedMessages = async (req, res) => {
             connect: { id: userId },
           },
         },
-
       });
-
     }
-
-    const messageWithViewers = await prisma.message.findMany({
-      where: {
-        chatId
-      },
-      include: {
-        viewedBy: true, // Include the users who viewed the message
-      },
+    console.log("succesfully updated view");
+    return res.status(200).json({
+      message: "ViewedBy updated for all messages in chat.",
     });
-   
-    console.log("succesfully updated view")
-    res.status(200).json({ message: "ViewedBy updated for all messages in chat.", messageWithViewers });
   } catch (error) {
-    console.log("failed update messages",error);
-    res.status(500).json({ error: "Failed to update messages viewedBy relations." });
+    console.log("failed update messages", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to update messages viewedBy relations." });
   }
 };

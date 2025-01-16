@@ -13,19 +13,33 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-  verifysAccessToken,
+  verifyAccessToken,
 } from "../services/tokenUtils.js";
 
 export const searchChatsAndUsers = async (req, res) => {
-  const { searchTerm } = req.body;
-  const  userId  = Number(req.body.userId)
+  const authHeader = req.headers.authorization;
 
-  console.log(userId)
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
+  const userId = user.sub;
+
+  const { searchTerm } = req.body;
+
   try {
-    console.log(searchTerm)
+   
     const users = await prisma.user.findMany({
       where: {
-      
         OR: [
           { firstname: { contains: searchTerm, mode: "insensitive" } },
           { lastname: { contains: searchTerm, mode: "insensitive" } },
@@ -33,27 +47,62 @@ export const searchChatsAndUsers = async (req, res) => {
           { username: { contains: searchTerm, mode: "insensitive" } },
         ],
       },
-    });
+    }); 
     const chats = await prisma.chat.findMany({
       where: {
-        userId,
+        members: {
+          some: { id: userId },
+        },
         name: { contains: searchTerm, mode: "insensitive" },
+      },
+      include: {
+        members: {
+          select: {
+            id: true, // Include only the fields you need
+            firstname: true,
+            lastname: true,
+            email: true,
+            username: true,
+            membershipStatus: true,
+            profileImage:true,
+          },
+        },
+        messages: {
+          include: {
+            files: true,
+          },
+        },
       },
     });
 
-    console.log(chats)
-
-    res.status(201).json({ chats, users });
+    return res.status(201).json({ chats, users });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch users" });
+    return res.status(500).json({ error: "Failed to fetch users" });
   }
 };
 
-export async function searchChatByExactMembers(req, res) {
+export const searchChatByExactMembers = async (req, res) => {
+  const authHeader = req.headers.authorization;
 
-    try {
-    const {memberIds, userId} = req.body 
-    memberIds.push(userId)
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
+  const userId = user.sub;
+  const memberIds = req.body.memberIds;
+  if (!memberIds.includes(userId)) {
+    memberIds.push(userId);
+  }
+  try {
     const chats = await prisma.chat.findMany({
       where: {
         name: null,
@@ -64,23 +113,32 @@ export async function searchChatByExactMembers(req, res) {
         },
       },
       include: {
-        members: true, 
+        members: {
+          select: {
+            id: true, // Include only the fields you need
+            firstname: true,
+            lastname: true,
+            email: true,
+            username: true,
+            membershipStatus: true,
+            profileImage:true,
+          },
+        },
+        messages: true,
       },
     });
 
-    const exactChats = chats.filter(chat => {
-      const chatMemberIds = chat.members.map(member => member.id);
-      
+    const exactChats = chats.filter((chat) => {
+      const chatMemberIds = chat.members.map((member) => member.id);
+
       return (
         chatMemberIds.length === memberIds.length &&
-        memberIds.every(id => chatMemberIds.includes(id))
+        memberIds.every((id) => chatMemberIds.includes(id))
       );
     });
-    res.status(201).json({foundchat:exactChats})
-    }catch(error) {
-
-        res.status(500).json({message: "failed to fecth"})
-
-    }
-   
+    return res.status(201).json({ foundchat: exactChats });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "failed to fecth" });
   }
+};

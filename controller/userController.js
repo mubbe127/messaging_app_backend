@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import {
   validateUser,
+  validateUpdateUser,
   checkExistingUser,
 } from "../validation/userValidation.js";
 
@@ -13,8 +14,12 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-  verifysAccessToken,
+  verifyAccessToken,
 } from "../services/tokenUtils.js";
+import multer from "multer";
+const upload = multer({ dest: "uploads/" });
+
+
 
 export const createUser = [
   validateUser,
@@ -28,7 +33,6 @@ export const createUser = [
 
     try {
       const conflictFields = await checkExistingUser(username, email);
-
       if (conflictFields) {
         return res.status(409).json(conflictFields);
       }
@@ -48,7 +52,7 @@ export const createUser = [
       const accessToken = generateAccessToken(user.id);
       const refreshToken = await generateRefreshToken(user.id);
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "User created successfully",
         accessToken,
         refreshToken,
@@ -62,27 +66,59 @@ export const createUser = [
     }
   },
 ];
-
+/*
 export const getUsers = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
   try {
     const users = await prisma.user.findMany();
     res.status(201).json({ users: users });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
-};
+};*/
 
 // Get a single user by ID
 export const getUser = async (req, res) => {
+
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+
   try {
-    const userId = Number(req.params.userId);
+    const userId = Number(req.params.userId)
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
     }
-    res.status(200).json({ user: user });
+    console.log("fetched user sucessfully")
+    res.status(200).json(user);
   } catch (error) {
     return res
       .status(500)
@@ -91,19 +127,42 @@ export const getUser = async (req, res) => {
 };
 
 export const updateUser = [
-  validateUser,
+  upload.single("file"),
+  validateUpdateUser,
   async (req, res) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({ error: "Authorization header missing" });
+    }
+  
+    // Extract the token from the header (format: "Bearer <token>")
+    const token = authHeader.split(" ")[1];
+  
+    const user = verifyAccessToken(token);
+  
+    if (!user) {
+      return res.status(401).json({ error: "Authorization not valid" });
+    }
+  
+    const userId = user.sub;
+   
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
       return res.status(400).json(validationErrors);
     }
-    const userId = Number(req.params.userId);
-    const { username, firstname, lastname, email, password, profileImage } =
+    const { username, firstname, lastname, email} =
       req.body;
+    
     try {
       const conflictFields = await checkExistingUser(username, email, userId);
       if (conflictFields) {
         return res.status(409).json(conflictFields);
+      }
+      let profileImage;
+      if(req.file) {
+       profileImage=req.file.path
       }
       const updateUser = await prisma.user.update({
         where: { id: userId },
@@ -111,8 +170,7 @@ export const updateUser = [
           username,
           firstname,
           lastname,
-          email,
-          password,
+          email,  
           profileImage,
         },
       });
@@ -126,8 +184,22 @@ export const updateUser = [
 ];
 
 export const deleteUser = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+
+  // Extract the token from the header (format: "Bearer <token>")
+  const token = authHeader.split(" ")[1];
+
+  const user = verifyAccessToken(token);
+
+  if (!user) {
+    return res.status(401).json({ error: "Authorization not valid" });
+  }
+  const userId = user.sub;
   try {
-    const userId = Number(req.params.userId);
     const user = await prisma.user.delete({
       where: { id: userId },
     });
@@ -137,22 +209,6 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const getUserChats = async (req, res) => {
-  const userId = Number(req.params.userId); // Ensure userId is a number
-
-  // Fetch only memberOfChats related to the user
-  const userChats = await prisma.user.findUnique({
-    where: {
-      id: userId, // Filter by userId
-    },
-    select: {
-      memberOfChats: true, // Only select the memberOfChats data
-    },
-  });
-
-  // Send the response
-  res.json(userChats);
-};
 
 export const loginUser = async (req, res, next) => {
   try {
@@ -214,7 +270,7 @@ export const refreshUserToken = async (req, res) => {
     return res.status(401).json({ message: "Refresh token required" });
   }
 
-  const verifiedToken = await verifyRefreshToken(refreshToken);
+  const verifiedToken = verifyRefreshToken(refreshToken);
 
   if (!verifiedToken) {
     console.log("Could not verify refresh token");
