@@ -19,10 +19,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({
-  origin: '*',
+  origin: 'http://localhost:5173', // Replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: false,
+  allowedHeaders: ['Authorization', 'Content-Type'], // Allow custom headers
+  credentials: false, // No cookies or credentials involved
 }));
+
+// Ensure preflight OPTIONS requests are handled
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"))
