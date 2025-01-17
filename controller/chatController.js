@@ -5,9 +5,6 @@ const upload = multer({ dest: "uploads/" });
 import { verifyAccessToken } from "../services/tokenUtils.js";
 export const createChat = async (req, res) => {
   const authHeader = req.headers.authorization;
-  if (!user) {
-    return res.status(401).json({ error: "Authorization not valid" });
-  }
 
   const user = verifyAccessToken(token);
 
