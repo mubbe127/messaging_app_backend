@@ -21,12 +21,11 @@ const app = express();
 app.use(cors({
   origin: '*', // Replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-
   credentials: false, // No cookies or credentials involved
 }));
 
 // Ensure preflight OPTIONS requests are handled
-app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"))
