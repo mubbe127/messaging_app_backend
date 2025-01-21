@@ -17,8 +17,8 @@ import {
   verifyAccessToken,
 } from "../services/tokenUtils.js";
 import multer from "multer";
-const upload = multer({ dest: "uploads/" });
-
+const storage = multer.memoryStorage(); // Use memory storage to get the file buffer
+const upload = multer({ storage: storage });
 
 
 export const createUser = [
@@ -162,22 +162,41 @@ export const updateUser = [
       }
       let profileImage;
       if(req.file) {
-       profileImage=req.file.path
+        const file = await prisma.file.create({
+          data: {
+            fileName: req.file.originalname,
+            fileType: req.file.mimetype,
+            fileSize: req.file.size,
+            data: req.file.buffer, // Store the binary data
+            userId,
+          }})
+
+          profileImage=file.id
       }
-      const updateUser = await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
           username,
           firstname,
           lastname,
-          email,  
+          email,
           profileImage,
         },
-      });
+        select: {
+          id: true,
+          username: true,
+          firstname: true,
+          lastname: true,
+          email: true,
+          username:true,
+          profileImage: true, // Only these fields will be returned
+        },
+      })
 
       // Logic for updating user
-      res.status(200).json({ message: "User updated successfully" });
+      res.status(200).json({ message: "User updated successfully", updatedUser });
     } catch (error) {
+      console.log(error)
       res.status(500).json({ error: "Failed to update user" });
     }
   },
@@ -227,7 +246,7 @@ export const loginUser = async (req, res, next) => {
       }
     })
 
-    console.log(user);
+
 
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
@@ -305,11 +324,12 @@ export const refreshUserToken = async (req, res) => {
         lastname:true,
         email:true,
         username:true,
+        membershipStatus:true,
         profileImage:true,
         id:true,
       }
     })// Generate new access token
-    console.log(user)
+    console.log("token generated user", user)
     res.status(201).json({ accessToken: newAccessToken, user });
   } catch (error) {
     console.log("LAST TOKEN ERROR");
@@ -318,7 +338,7 @@ export const refreshUserToken = async (req, res) => {
 };
 export const logout = async (req, res) => {
   const { refreshToken } = req.body;
-  console.log(refreshToken);
+ 
   const tokenId = jwtDecode(refreshToken).id;
 
   if (refreshToken) {

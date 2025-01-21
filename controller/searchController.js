@@ -58,7 +58,13 @@ export const searchChatsAndUsers = async (req, res) => {
         },
         messages: {
           include: {
-            files: true,
+            files: {
+              select:{
+                id: true,
+                fileName: true,
+                fileType: true,
+              }
+            },
           },
         },
       },

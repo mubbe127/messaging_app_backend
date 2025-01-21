@@ -1,6 +1,7 @@
 import prisma from "../model/prismaClient.js";
 import multer from "multer";
-const upload = multer({ dest: "uploads/" });
+const storage = multer.memoryStorage(); // Use memory storage to get the file buffer
+const upload = multer({ storage: storage });
 
 import { verifyAccessToken } from "../services/tokenUtils.js";
 export const createChat = async (req, res) => {
@@ -92,16 +93,21 @@ export const getChats = async (req, res) => {
         },
         messages: {
           include: {
-            files: true,
+            files: {
+              select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+              },
+            },
             viewedBy: true,
           },
         },
       },
       orderBy: {
-        updatedAt: "desc"
-      }
+        updatedAt: "desc",
+      },
     });
-    console.log(chats)
     return res.status(201).json(chats);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch chats" });
@@ -144,12 +150,18 @@ export const getChat = async (req, res) => {
             email: true,
             username: true,
             membershipStatus: true,
-            profileImage:true,
+            profileImage: true,
           },
         },
         messages: {
           include: {
-            files: true, // Include the related files for each message
+            files: {
+              select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+              },
+            }, // Include the related files for each message
           },
         },
       },
@@ -198,9 +210,19 @@ export const updateChat = [
         connect: memberIds.map((id) => ({ id })),
       };
     }
-    console.log("req fil2", req.file);
-    if (req.file) {
-      updateData.data.profileImage = req.file.path;
+
+  
+    if(req.file) {
+      const file = await prisma.file.create({
+        data: {
+          fileName: req.file.originalname,
+          fileType: req.file.mimetype,
+          fileSize: req.file.size,
+          data: req.file.buffer, // Store the binary data
+          userId,
+          chatId
+        }})
+        updateData.data.profileImage=file.id
     }
     try {
       const updatedChat = await prisma.chat.update(updateData);

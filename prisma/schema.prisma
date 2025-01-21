@@ -24,7 +24,7 @@ model User {
   membershipStatus String         @default("basic")
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  profileImage     String?
+  profileImage     Int?
   
   viewedMessages   Message[]      @relation("MessageViewers")
   adminOfChats     Chat[]         @relation("ChatOwners")
@@ -39,11 +39,12 @@ model Chat {
    name             String?         
    createdAt        DateTime       @default(now())
    updatedAt        DateTime       @updatedAt
-    profileImage      String?    
+  profileImage      Int?    
    deletedAt        DateTime?
    admins           User[]         @relation("ChatOwners") 
    members          User[]         @relation("ChatMembers")
    messages         Message[]     
+   files            File[]
 
 
 }
@@ -67,11 +68,15 @@ model File {
   fileName   String
   fileType   String
   fileSize   Int 
-  filePath    String  // URL to the file (either local or cloud storage)
-  messageId  Int     // Foreign key to the message this file is attached to
-  userId     Int
-  message    Message @relation(fields: [messageId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  filePath    String?  // URL to the file (either local or cloud storage)
+  messageId  Int?     // Foreign key to the message this file is attached to
+  userId     Int?
+  chatId     Int?
+  data       Bytes?
+
+  chat       Chat?    @relation(fields: [chatId], references: [id])
+  message    Message? @relation(fields: [messageId], references: [id])
+  user       User?     @relation(fields: [userId], references: [id])
 }
 
 model Token {

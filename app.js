@@ -10,6 +10,7 @@ import chatRouter from './routes/chatRouter.js';
 import userRouter from './routes/userRouter.js';
 import messageRouter from './routes/messageRouter.js';
 import searchRouter from './routes/searchRouter.js';
+import fileRouter from './routes/fileRouter.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -36,6 +37,7 @@ app.use('/api/users', userRouter)
 app.use('/api/chats', chatRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/search', searchRouter)
+app.use('/api/file', fileRouter)
 
 app.listen(4100, () => console.log("app listening on port 4100!"));
 

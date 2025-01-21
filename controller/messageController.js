@@ -1,6 +1,7 @@
 import prisma from "../model/prismaClient.js";
 import multer from "multer";
-const upload = multer({ dest: "uploads/" });
+const storage = multer.memoryStorage(); // Use memory storage to get the file buffer
+const upload = multer({ storage: storage });
 import { verifyAccessToken } from "../services/tokenUtils.js";
 
 export const createMessage = [
@@ -43,16 +44,19 @@ export const createMessage = [
       });
 
       if(req.file){
-      const file = await prisma.file.create({
-        data: {
-          fileName: req.file.originalname,
-          fileType: req.file.mimetype,
-          fileSize: req.file.size,
-          filePath: req.file.path,
-          userId,
-          messageId: message.id,
-        },
-      });
+        console.log("file buffer", req.file.buffer)
+        const file = await prisma.file.create({
+          data: {
+            fileName: req.file.originalname,
+            fileType: req.file.mimetype,
+            fileSize: req.file.size,
+            filePath: undefined,
+            data: req.file.buffer, // Store the binary data
+            userId,
+            messageId: message.id,
+            chatId
+          },
+        });
       }
       const updateChat = await prisma.chat.update({
         where: {
@@ -63,7 +67,7 @@ export const createMessage = [
         }
       })
      
-      console.log("succesfully created");
+      console.log("succesfully created message");
       return res
         .status(201)
         .json({ message: "Succesfully created message", message });
@@ -236,7 +240,7 @@ export const updateViewedMessages = async (req, res) => {
     return res.status(401).json({ error: "Authorization not valid" });
   }
   const userId = user.sub;
-  console.log("update view messages");
+
   const chatId = Number(req.body.chatId);
   try {
     const chat = await prisma.chat.findUnique({
@@ -271,7 +275,7 @@ export const updateViewedMessages = async (req, res) => {
         },
       });
     }
-    console.log("succesfully updated view");
+   
     return res.status(200).json({
       message: "ViewedBy updated for all messages in chat.",
     });
