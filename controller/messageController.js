@@ -61,7 +61,6 @@ export const createMessage = [
             fileName: req.file.originalname,
             fileType: req.file.mimetype,
             fileSize: req.file.size,
-            filePath: randomString,
             data: req.file.buffer, // Store the binary data
             userId,
             messageId: message.id,
