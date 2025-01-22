@@ -188,6 +188,8 @@ export const updateUser = [
             filePath: randomString,
             data: req.file.buffer, // Store the binary data
             userId,
+            message:undefined,
+            chat:undefined
           }})
 
           profileImage=file.id
