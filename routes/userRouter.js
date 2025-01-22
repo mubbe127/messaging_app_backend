@@ -1,10 +1,10 @@
 import {Router} from "express";
-import  {getUser, createUser, updateUser, deleteUser} from "../controller/userController.js";
+import  {getUser,getUsers, createUser, updateUser, deleteUser} from "../controller/userController.js";
 import { loginUser, logout, refreshUserToken } from "../controller/userController.js";
 
 const userRouter = Router()
 
-
+userRouter.get('/', getUsers)
 userRouter.get('/:userId', getUser)
 userRouter.post('/', createUser)
 userRouter.put('/:userId', updateUser)

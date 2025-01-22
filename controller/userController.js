@@ -66,7 +66,7 @@ export const createUser = [
     }
   },
 ];
-/*
+
 export const getUsers = async (req, res) => {
   const authHeader = req.headers.authorization;
 
@@ -84,12 +84,21 @@ export const getUsers = async (req, res) => {
   }
 
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        firstname: true,
+        lastname: true,
+        email: true,  
+        profileImage: true, // Only these fields will be returned
+      },
+    });
     res.status(201).json({ users: users });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
-};*/
+};
 
 // Get a single user by ID
 export const getUser = async (req, res) => {

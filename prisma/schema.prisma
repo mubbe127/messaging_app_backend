@@ -37,9 +37,10 @@ model User {
 model Chat {
    id               Int            @id @default(autoincrement())
    name             String?         
+   communityChat    String?        @unique
    createdAt        DateTime       @default(now())
    updatedAt        DateTime       @updatedAt
-  profileImage      Int?    
+   profileImage      Int?    
    deletedAt        DateTime?
    admins           User[]         @relation("ChatOwners") 
    members          User[]         @relation("ChatMembers")

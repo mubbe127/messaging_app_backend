@@ -196,23 +196,36 @@ export const updateChat = [
       return res.status(401).json({ error: "Authorization not valid" });
     }
 
-    const chatId = Number(req.params.chatId);
     const { name, memberIds } = req.body;
-    const updateData = {
-      where: { id: chatId, members: { some: { id: userId } } },
-      data: {},
-    };
+  
+    let updateData;
+    let chatId = req.params.chatId
+    console.log("chatId:", chatId)
+    if (chatId === "community") {
+      updateData = {
+        where: { communityChat: "Community chat"},
+        data: {},
+      };
+    } else {
+      chatId = Number(req.params.chatId);
+      updateData = {
+        where: { id: chatId, members: { some: { id: userId } } },
+        data: {},
+      };
+    }
+
     if (name) {
       updateData.data.name = name;
     }
     if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+     
+      console.log("try updating memebrsids at updateChat controller", memberIds)
       updateData.data.members = {
         connect: memberIds.map((id) => ({ id })),
       };
     }
 
-  
-    if(req.file) {
+    if (req.file) {
       const file = await prisma.file.create({
         data: {
           fileName: req.file.originalname,
@@ -220,9 +233,10 @@ export const updateChat = [
           fileSize: req.file.size,
           data: req.file.buffer, // Store the binary data
           userId,
-          chatId
-        }})
-        updateData.data.profileImage=file.id
+          chatId,
+        },
+      });
+      updateData.data.profileImage = file.id;
     }
     try {
       const updatedChat = await prisma.chat.update(updateData);
