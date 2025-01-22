@@ -4,17 +4,17 @@ const envFile =".env.production"
   
 dotenv.config({ path: envFile });
 
-async function updateDb() {
-  const updateChat = await prisma.chat.update({
-    where: {
-      id: 1,
-    },
-    data: {
-      communityChat: "Community chat",
-    },
-  });
+async function createChat(){
 
-  console.log(updateChat)
+    const createChat = await prisma.chat.create({
+        data: {
+            name: "Community chat",
+            communityChat: "Community chat"
+        }
+    })
+
+    console.log(createChat)
 }
 
-updateDb()
+createChat()
+

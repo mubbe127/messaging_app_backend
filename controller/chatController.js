@@ -203,7 +203,7 @@ export const updateChat = [
     console.log("chatId:", chatId)
     if (chatId === "community") {
       updateData = {
-        where: { communityChat: "Community chat"},
+        where: { id:1},
         data: {},
       };
     } else {

@@ -6,6 +6,8 @@ const envFile =
     : ".env.development";
 dotenv.config({ path: envFile });
 
+
+
 async function updateDb() {
   const updateUser = await prisma.user.update({
     where: {
@@ -18,3 +20,4 @@ async function updateDb() {
 }
 
 updateDb()
+
