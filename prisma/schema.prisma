@@ -74,7 +74,6 @@ model File {
   userId     Int?
   chatId     Int?
   data       Bytes?
-
   chat       Chat?    @relation(fields: [chatId], references: [id])
   message    Message? @relation(fields: [messageId], references: [id])
   user       User?     @relation(fields: [userId], references: [id])
