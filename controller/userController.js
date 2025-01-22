@@ -193,6 +193,7 @@ export const updateUser = [
           }})
 
           profileImage=file.id
+          console.log("file created", file)
       }
       const updatedUser = await prisma.user.update({
         where: { id: userId },
