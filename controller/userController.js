@@ -20,6 +20,14 @@ import multer from "multer";
 const storage = multer.memoryStorage(); // Use memory storage to get the file buffer
 const upload = multer({ storage: storage });
 
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
 export const createUser = [
   validateUser,
@@ -171,11 +179,13 @@ export const updateUser = [
       }
       let profileImage;
       if(req.file) {
+        const randomString = generateRandomString(10)
         const file = await prisma.file.create({
           data: {
             fileName: req.file.originalname,
             fileType: req.file.mimetype,
             fileSize: req.file.size,
+            filePath: randomString
             data: req.file.buffer, // Store the binary data
             userId,
           }})
