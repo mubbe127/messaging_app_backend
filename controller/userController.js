@@ -176,6 +176,7 @@ export const updateUser = [
             fileName: req.file.originalname,
             fileType: req.file.mimetype,
             fileSize: req.file.size,
+            filePath:undefined,
             data: req.file.buffer, // Store the binary data
             userId,
           }})
