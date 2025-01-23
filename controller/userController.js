@@ -31,6 +31,12 @@ export const createUser = [
     }
 
     const { username, firstname, lastname, email, password } = req.body;
+  
+    const lowercaseUsername = username.toLowerCase();
+    const lowercaseEmail = email.toLowerCase()
+
+    const capitalizedFirstname = firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase();
+    const capitalizedLastname = lastname.charAt(0).toUpperCase() + lastname.slice(1).toLowerCase(); 
 
     try {
       const conflictFields = await checkExistingUser(username, email);
@@ -42,10 +48,10 @@ export const createUser = [
 
       const user = await prisma.user.create({
         data: {
-          username,
-          firstname,
-          lastname,
-          email,
+          username:lowercaseUsername,
+          firstname:capitalizedFirstname,
+          lastname:capitalizedLastname,
+          email:lowercaseEmail,
           password: hashedPassword,
         },
       });
@@ -164,6 +170,12 @@ export const updateUser = [
     }
     const { username, firstname, lastname, email} =
       req.body;
+
+      const lowercaseUsername = username.toLowerCase();
+      const lowercaseEmail = email.toLowerCase()
+  
+      const capitalizedFirstname = firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase();
+      const capitalizedLastname = lastname.charAt(0).toUpperCase() + lastname.slice(1).toLowerCase(); 
     
     try {
       const conflictFields = await checkExistingUser(username, email, userId);
@@ -172,7 +184,6 @@ export const updateUser = [
       }
       let profileImage;
       if(req.file) {
-        const randomString = generateRandomString(10)
         const file = await prisma.file.create({
           data: {
             fileName: req.file.originalname,
@@ -190,10 +201,10 @@ export const updateUser = [
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
-          username,
-          firstname,
-          lastname,
-          email,
+          username: lowercaseUsername,
+          firstname: capitalizedFirstname,
+          lastname: capitalizedLastname,
+          email: lowercaseEmail,
           profileImage,
         },
         select: {
@@ -253,10 +264,13 @@ export const loginUser = async (req, res, next) => {
         .json({ message: "Username and password are required." });
     }
 
+    const lowercaseUsername = username.toLowerCase();
+   
+
     // Using Prisma to query the user by username
     const user= await prisma.user.findUnique({
       where:{
-        username,
+        username:lowercaseUsername,
       }
     })
 
