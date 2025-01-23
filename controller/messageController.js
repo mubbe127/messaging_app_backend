@@ -46,7 +46,7 @@ export const createMessage = [
       });
 
       if(req.file){
-        const randomString = generateRandomString(10); //
+      
         console.log("file buffer", req.file.buffer)
         const file = await prisma.file.create({
           data: {
