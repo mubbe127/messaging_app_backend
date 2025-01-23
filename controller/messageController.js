@@ -4,14 +4,6 @@ const storage = multer.memoryStorage(); // Use memory storage to get the file bu
 const upload = multer({ storage: storage });
 import { verifyAccessToken } from "../services/tokenUtils.js";
 
-function generateRandomString(length) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
 
 // Example usage:
 export const createMessage = [
